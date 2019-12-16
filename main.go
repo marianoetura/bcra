@@ -254,7 +254,7 @@ func ErrorHandlerUrl(message string, url string, err error) {
 	os.Exit(1)
 }
 
-//Realiza una actualizacion de datos si hace una hora que no se actualizan.
+//RefreshData Realiza una actualizacion de datos si hace una hora que no se actualizan.
 func RefreshData() {
 	aux := time.Now()
 	if aux.Hour() > lastdata.Hour() {
