@@ -12,3 +12,9 @@ type Json struct {
 	Blue      float32 `json:"bluedollar"`
 	Variacion float32 `json:"variation"`
 }
+
+//Purecin es el struct para pure.html
+type Purecin struct {
+	Pure string `json:"pure"`
+	Blue string `json:"blue"`
+}

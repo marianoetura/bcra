@@ -58,7 +58,7 @@ func populateTemplates() *template.Template {
 func serverInit() {
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/cartera", cartera)
-	http.HandleFunc("/p", purecito)
+	http.HandleFunc("/pure", purecito)
 	log.Fatal(http.ListenAndServe("localhost:8080", nil))
 }
 
@@ -92,7 +92,19 @@ func cartera(w http.ResponseWriter, r *http.Request) {
 
 func purecito(w http.ResponseWriter, r *http.Request) {
 	RefreshData() //Actualizo datos de ser necesario
-	w.Write([]byte(Pure()))
+	//w.Write([]byte(Pure()))
+	templates := populateTemplates()
+	requestedFile := r.URL.Path[1:]
+	t := templates.Lookup(requestedFile + ".html")
+	if t != nil {
+		ctx := Pure()
+		err := t.Execute(w, ctx)
+		if err != nil {
+			log.Println(err)
+		}
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+	}
 }
 
 //DollarXDay devuelve las cotizaciones y el porcentaje de variacion.
@@ -145,7 +157,7 @@ func DollarXDay(fecha string) viewmodel.Json {
 }
 
 //Pure devuelve mejores fechas para hacer pure o comprar dolar blue
-func Pure() string {
+func Pure() viewmodel.Purecin {
 	fechai := "2019-10-28"
 	i := 0
 	j := 0
@@ -206,10 +218,13 @@ func Pure() string {
 	}
 
 	fmt.Println("El mejor dia para hacer Pure fue el: ", fmax, " con un porcentaje de ", difmax, "% de diferencia")
-	purecito := fmt.Sprintln("El mejor dia para hacer Pure fue el: ", fmax, " con un porcentaje de ", difmax, "% de diferencia")
+	purecito1 := fmt.Sprintln("El mejor dia para hacer Pure fue el: ", fmax, " con un porcentaje de ", difmax, "% de diferencia")
 	fmt.Println("El mejor dia para comprar Blue fue el: ", fmin, "con un porcentaje de ", difmin, "% de diferencia")
-	purecito = purecito + fmt.Sprintln("El mejor dia para comprar Blue fue el: ", fmin, "con un porcentaje de ", difmin, "% de diferencia")
-
+	purecito2 := fmt.Sprintln("El mejor dia para comprar Blue fue el: ", fmin, "con un porcentaje de ", difmin, "% de diferencia")
+	purecito := viewmodel.Purecin{
+		Pure: purecito1,
+		Blue: purecito2,
+	}
 	return purecito
 }
 
