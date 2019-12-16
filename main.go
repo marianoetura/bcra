@@ -9,6 +9,9 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/marianoetura/bcra/constants"
+	"github.com/marianoetura/bcra/viewmodel"
 )
 
 // Quiero que hagan un programa que para una fecha determinada
@@ -20,26 +23,9 @@ import (
 // comprar dólar oficial, venderlo al blue y quedarme con una diferencia.
 // A su vez, quiero saber cuál fue el mejor día para comprar dólar blue.
 
-const (
-	authToken = "BEARER eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDgwNDEyMTYsInR5cGUiOiJleHRlcm5hbCIsInVzZXIiOiJkNjI5MTE0MUB1cmhlbi5jb20ifQ.ZWGZVQ9hioNs909HdOMf4j3NruH1Uu3D8y0zOgp1cGX0IO-SEl2xaulLUDiR4HRyA7fpm-9JdCrzbyxkEaNUQA"
-)
-
-type Data struct {
-	Date  string  `json:"d"`
-	Value float32 `json:"v"`
-}
-
-//Json es una estructura para devolver datos de dolar
-type Json struct {
-	Date      string  `json:"date"`
-	Official  float32 `json:"officialdolar"`
-	Blue      float32 `json:"bluedollar"`
-	Variacion float32 `json:"variation"`
-}
-
-var varDollar []Data
-var sblueDollar []Data
-var sofficialDollar []Data
+var varDollar []viewmodel.Data
+var sblueDollar []viewmodel.Data
+var sofficialDollar []viewmodel.Data
 var blueDollar map[string]float32
 var officialDollar map[string]float32
 var lastdata time.Time
@@ -65,8 +51,7 @@ func main() {
 
 func populateTemplates() *template.Template {
 	result := template.New("templates")
-	const basePath = "templates"
-	template.Must(result.ParseGlob(basePath + "/*.html"))
+	template.Must(result.ParseGlob(constants.BasePath + "/*.html"))
 	return result
 }
 
@@ -111,7 +96,7 @@ func purecito(w http.ResponseWriter, r *http.Request) {
 }
 
 //DollarXDay devuelve las cotizaciones y el porcentaje de variacion.
-func DollarXDay(fecha string) Json {
+func DollarXDay(fecha string) viewmodel.Json {
 	var response string
 	existsO, existsB := false, false
 
@@ -150,18 +135,13 @@ func DollarXDay(fecha string) Json {
 		}
 	}
 
-	yeison := Json{
+	yeison := viewmodel.Json{
 		Date:      fecha,
 		Official:  officialDollar[fecha],
 		Blue:      blueDollar[fecha],
 		Variacion: variacion,
 	}
 	return yeison
-	// a, err := json.Marshal(yeison)
-	// if err != nil {
-	// 	fmt.Printf("Falló la creacion del JSON")
-	// }
-	// return a
 }
 
 //Pure devuelve mejores fechas para hacer pure o comprar dolar blue
@@ -233,7 +213,7 @@ func Pure() string {
 	return purecito
 }
 
-func getInfo(option string) []Data {
+func getInfo(option string) []viewmodel.Data {
 
 	var url string
 
@@ -251,7 +231,7 @@ func getInfo(option string) []Data {
 		ErrorHandlerUrl("Falló la creación del request a la URL '%s', dando el error %v", url, err)
 	}
 
-	req.Header.Add("Authorization", authToken)
+	req.Header.Add("Authorization", constants.AuthToken)
 	resp, err := client.Do(req)
 	if err != nil {
 		ErrorHandlerUrl("Falló el acceso a la URL '%s', dando el error %v", url, err)
@@ -262,7 +242,7 @@ func getInfo(option string) []Data {
 		ErrorHandlerUrl("Falló el acceso al body de la respuesta de '%s', dando el error %v", url, err)
 	}
 
-	var data []Data
+	var data []viewmodel.Data
 	_ = json.Unmarshal(body, &data)
 
 	return data
