@@ -1,0 +1,8 @@
+html {
+    background-color: #00539F;
+  }
+  p {
+    color: red;
+    width: 500px;
+    border: 1px solid black;
+  }
