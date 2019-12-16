@@ -27,9 +27,10 @@ type Data struct {
 	Value float32 `json:"v"`
 }
 
+//Json es una estructura para devolver datos de dolar
 type Json struct {
 	Date      string `json:"date"`
-	Official  string `json:"officialdolalr"`
+	Official  string `json:"officialdolar"`
 	Blue      string `json:"bluedollar"`
 	Variacion string `json:"variation"`
 }
@@ -73,6 +74,7 @@ func main() {
 func serverInit() {
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/cartera", cartera)
+	http.HandleFunc("/p", purecito)
 	log.Fatal(http.ListenAndServe("localhost:8080", nil))
 }
 
@@ -89,6 +91,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func cartera(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("👜"))
+}
+
+func purecito(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(Pure()))
 }
 
 //DollarXDay devuelve las cotizaciones y el porcentaje de variacion.
@@ -146,7 +152,7 @@ func DollarXDay(fecha string) []byte {
 }
 
 //Pure
-func Pure() {
+func Pure() string {
 	fechai := "2019-10-28"
 	i := 0
 	j := 0
@@ -207,7 +213,11 @@ func Pure() {
 	}
 
 	fmt.Println("El mejor dia para hacer Pure fue el: ", fmax, " con un porcentaje de ", difmax, "% de diferencia")
+	purecito := fmt.Sprintln("El mejor dia para hacer Pure fue el: ", fmax, " con un porcentaje de ", difmax, "% de diferencia")
 	fmt.Println("El mejor dia para comprar Blue fue el: ", fmin, "con un porcentaje de ", difmin, "% de diferencia")
+	purecito = purecito + fmt.Sprintln("El mejor dia para comprar Blue fue el: ", fmin, "con un porcentaje de ", difmin, "% de diferencia")
+
+	return purecito
 }
 
 func getInfo(option string) []Data {
