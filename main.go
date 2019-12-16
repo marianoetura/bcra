@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 // Quiero que hagan un programa que para una fecha determinada
@@ -40,6 +41,7 @@ var sblueDollar []Data
 var sofficialDollar []Data
 var blueDollar map[string]float32
 var officialDollar map[string]float32
+var lastdata time.Time
 
 func main() {
 
@@ -56,19 +58,8 @@ func main() {
 	for i := 0; i < len(sblueDollar); i++ {
 		blueDollar[sblueDollar[i].Date] = sblueDollar[i].Value
 	}
-
+	lastdata = time.Now()
 	serverInit()
-
-	//I added a functionality to choose in console.
-	// var option int
-	// fmt.Println("Que accion desea realizar? Ingrese:\n 1: Ver cotizaciones y variacion\n 2: Hacer Pure o Comprar Blue")
-	// fmt.Scanln(&option)
-	// switch option {
-	// case 1:
-	// 	DollarXDay()
-	// case 2:
-	// 	Pure()
-	// }
 }
 
 func serverInit() {
@@ -79,11 +70,10 @@ func serverInit() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	RefreshData() //Actualizo datos de ser necesario.
 	values := r.URL.Query()
-	//var s string
 	for k := range values {
 		fmt.Println(k, values[k])
-		//s = DollarXDay(k)
 		w.Write(DollarXDay(k))
 	}
 	//w.Write([]byte(s))
@@ -94,6 +84,7 @@ func cartera(w http.ResponseWriter, r *http.Request) {
 }
 
 func purecito(w http.ResponseWriter, r *http.Request) {
+	RefreshData() //Actualizo datos de ser necesario
 	w.Write([]byte(Pure()))
 }
 
@@ -151,7 +142,7 @@ func DollarXDay(fecha string) []byte {
 	return a
 }
 
-//Pure
+//Pure devuelve mejores fechas para hacer pure o comprar dolar blue
 func Pure() string {
 	fechai := "2019-10-28"
 	i := 0
@@ -259,4 +250,24 @@ func getInfo(option string) []Data {
 func ErrorHandlerUrl(message string, url string, err error) {
 	fmt.Printf(message, url, err.Error())
 	os.Exit(1)
+}
+
+//Realiza una actualizacion de datos si hace una hora que no se actualizan.
+func RefreshData() {
+	aux := time.Now()
+	if aux.Hour() > lastdata.Hour() {
+		sofficialDollar = getInfo("official")
+		sblueDollar = getInfo("blue")
+
+		//I create maps to perform searches more efficiently
+		officialDollar = make(map[string]float32)
+		for i := 0; i < len(sofficialDollar); i++ {
+			officialDollar[sofficialDollar[i].Date] = sofficialDollar[i].Value
+		}
+
+		blueDollar = make(map[string]float32)
+		for i := 0; i < len(sblueDollar); i++ {
+			blueDollar[sblueDollar[i].Date] = sblueDollar[i].Value
+		}
+	}
 }
