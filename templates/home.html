@@ -1,0 +1,17 @@
+<html>
+    <head>
+
+    </head>
+    <body>
+        <header>
+            <div>
+                <h1>Datos para la fecha: {{.Date}}</h1>
+            </div>
+        </header>
+        <p>Cotizacion del dolar oficial: {{ printf "$%.2f" .Official}}</p>
+        <p>Cotizacion del dolar blue: {{ printf "$%.2f" .Blue}}</p>
+        <p>Porcentaje de variacion entre oficial y blue: {{ printf "%.2f" .Variacion }}% </p>
+        <p>Pericotes ®</p>
+    </body>
+    <script></script>
+</html>

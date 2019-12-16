@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -30,10 +31,10 @@ type Data struct {
 
 //Json es una estructura para devolver datos de dolar
 type Json struct {
-	Date      string `json:"date"`
-	Official  string `json:"officialdolar"`
-	Blue      string `json:"bluedollar"`
-	Variacion string `json:"variation"`
+	Date      string  `json:"date"`
+	Official  float32 `json:"officialdolar"`
+	Blue      float32 `json:"bluedollar"`
+	Variacion float32 `json:"variation"`
 }
 
 var varDollar []Data
@@ -62,6 +63,13 @@ func main() {
 	serverInit()
 }
 
+func populateTemplates() *template.Template {
+	result := template.New("templates")
+	const basePath = "templates"
+	template.Must(result.ParseGlob(basePath + "/*.html"))
+	return result
+}
+
 func serverInit() {
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/cartera", cartera)
@@ -71,12 +79,26 @@ func serverInit() {
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	RefreshData() //Actualizo datos de ser necesario.
+	var ks []string
 	values := r.URL.Query()
 	for k := range values {
 		fmt.Println(k, values[k])
-		w.Write(DollarXDay(k))
+		ks = append(ks, k)
+		//w.Write(DollarXDay(k))
 	}
-	//w.Write([]byte(s))
+
+	templates := populateTemplates()
+	requestedFile := r.URL.Path[1:]
+	t := templates.Lookup(requestedFile + ".html")
+	if t != nil {
+		ctx := DollarXDay(ks[0])
+		err := t.Execute(w, ctx)
+		if err != nil {
+			log.Println(err)
+		}
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+	}
 }
 
 func cartera(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +111,7 @@ func purecito(w http.ResponseWriter, r *http.Request) {
 }
 
 //DollarXDay devuelve las cotizaciones y el porcentaje de variacion.
-func DollarXDay(fecha string) []byte {
+func DollarXDay(fecha string) Json {
 	var response string
 	existsO, existsB := false, false
 
@@ -130,16 +152,16 @@ func DollarXDay(fecha string) []byte {
 
 	yeison := Json{
 		Date:      fecha,
-		Official:  "$" + fmt.Sprint(officialDollar[fecha]),
-		Blue:      "$" + fmt.Sprint(blueDollar[fecha]),
-		Variacion: fmt.Sprint(variacion) + "%",
+		Official:  officialDollar[fecha],
+		Blue:      blueDollar[fecha],
+		Variacion: variacion,
 	}
-
-	a, err := json.Marshal(yeison)
-	if err != nil {
-		fmt.Printf("Falló la creacion del JSON")
-	}
-	return a
+	return yeison
+	// a, err := json.Marshal(yeison)
+	// if err != nil {
+	// 	fmt.Printf("Falló la creacion del JSON")
+	// }
+	// return a
 }
 
 //Pure devuelve mejores fechas para hacer pure o comprar dolar blue

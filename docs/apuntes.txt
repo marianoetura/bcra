@@ -1,0 +1,6 @@
+Algunas funciones del router (Todas estas son de la libreria http)
+
+Handle()
+HandleFunc()
+NotFoundHandler()
+RedirectHandler()
