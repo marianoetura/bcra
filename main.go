@@ -27,6 +27,13 @@ type Data struct {
 	Value float32 `json:"v"`
 }
 
+type Json struct {
+	Date      string `json:"date"`
+	Official  string `json:"officialdolalr"`
+	Blue      string `json:"bluedollar"`
+	Variacion string `json:"variation"`
+}
+
 var varDollar []Data
 var sblueDollar []Data
 var sofficialDollar []Data
@@ -71,13 +78,13 @@ func serverInit() {
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	values := r.URL.Query()
-	var s string
+	//var s string
 	for k := range values {
 		fmt.Println(k, values[k])
-		s = DollarXDay(k)
+		//s = DollarXDay(k)
+		w.Write(DollarXDay(k))
 	}
-	w.Write([]byte(values.Get("param1")))
-	w.Write([]byte(s))
+	//w.Write([]byte(s))
 }
 
 func cartera(w http.ResponseWriter, r *http.Request) {
@@ -85,7 +92,7 @@ func cartera(w http.ResponseWriter, r *http.Request) {
 }
 
 //DollarXDay devuelve las cotizaciones y el porcentaje de variacion.
-func DollarXDay(fecha string) string {
+func DollarXDay(fecha string) []byte {
 	var response string
 	existsO, existsB := false, false
 
@@ -106,11 +113,12 @@ func DollarXDay(fecha string) string {
 		fmt.Println("No existe valor para Dolar Blue en la fecha", fecha)
 		response = response + "No existe valor para Dolar Blue en la fecha\n"
 	}
-
+	var variacion float32
 	if existsB && existsO {
-		variacion := blueDollar[fecha] - officialDollar[fecha]
+		variacion = blueDollar[fecha] - officialDollar[fecha]
 		variacion = variacion / officialDollar[fecha]
-		fmt.Println("El porcentaje de variacion para la fecha ", fecha, " fue de ", variacion*100, "%")
+		variacion = variacion * 100
+		fmt.Println("El porcentaje de variacion para la fecha ", fecha, " fue de ", variacion, "%")
 		response = response + fmt.Sprint("El porcentaje de variacion para la fecha ", fecha, " fue de ", variacion*100, "%\n")
 	} else {
 
@@ -122,7 +130,19 @@ func DollarXDay(fecha string) string {
 			response = response + "No hay datos para la fecha ingresada, verifique y reingrese\n"
 		}
 	}
-	return response
+
+	yeison := Json{
+		Date:      fecha,
+		Official:  "$" + fmt.Sprint(officialDollar[fecha]),
+		Blue:      "$" + fmt.Sprint(blueDollar[fecha]),
+		Variacion: fmt.Sprint(variacion) + "%",
+	}
+
+	a, err := json.Marshal(yeison)
+	if err != nil {
+		fmt.Printf("Falló la creacion del JSON")
+	}
+	return a
 }
 
 //Pure
